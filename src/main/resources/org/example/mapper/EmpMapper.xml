@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.example.mapper.EmpMapper">
+
+    <!--
+        查询结果直接使用 resultType="Emp"（别名来自 <typeAliases> 的包扫描）。
+        数据库下划线列名（emp_id、emp_name、hire_date ...）依靠
+        mapUnderscoreToCamelCase=true 自动映射为驼峰字段，无需额外 resultMap。
+    -->
+    <select id="selectById" parameterType="int" resultType="Emp">
+        SELECT emp_id, emp_name, gender, dept, post, salary, hire_date, status
+        FROM emp
+        WHERE emp_id = #{empId}
+    </select>
+
+    <select id="selectAll" resultType="Emp">
+        SELECT emp_id, emp_name, gender, dept, post, salary, hire_date, status
+        FROM emp
+        ORDER BY emp_id
+    </select>
+
+    <!-- useGeneratedKeys + keyProperty：把数据库自增主键回填到实体类 empId 字段 -->
+    <insert id="insert" parameterType="Emp" useGeneratedKeys="true" keyProperty="empId">
+        INSERT INTO emp (emp_name, gender, dept, post, salary, hire_date, status)
+        VALUES (#{empName}, #{gender}, #{dept}, #{post}, #{salary}, #{hireDate}, #{status})
+    </insert>
+
+    <update id="update" parameterType="Emp">
+        UPDATE emp
+        SET emp_name = #{empName},
+            gender    = #{gender},
+            dept      = #{dept},
+            post      = #{post},
+            salary    = #{salary},
+            hire_date = #{hireDate},
+            status    = #{status}
+        WHERE emp_id = #{empId}
+    </update>
+
+    <delete id="deleteById" parameterType="int">
+        DELETE FROM emp
+        WHERE emp_id = #{empId}
+    </delete>
+
+</mapper>
