@@ -4,9 +4,12 @@
         "http://mybatis.org/dtd/mybatis-3-config.dtd">
 <configuration>
 
+    <!-- 引入外部数据库连接属性文件（properties 必须是 configuration 的第一个子元素） -->
+    <properties resource="db.properties"/>
+
     <!-- 全局设置 -->
     <settings>
-        <!-- 下划线命名自动映射为驼峰命名（如 user_name -> userName） -->
+        <!-- 下划线命名自动映射为驼峰命名（如 emp_name -> empName） -->
         <setting name="mapUnderscoreToCamelCase" value="true"/>
         <!-- 使用 Log4j 输出 SQL 日志 -->
         <setting name="logImpl" value="LOG4J"/>
@@ -24,11 +27,10 @@
             <transactionManager type="JDBC"/>
             <!-- 数据源：POOLED 表示使用 MyBatis 自带的连接池 -->
             <dataSource type="POOLED">
-                <property name="driver" value="com.mysql.cj.jdbc.Driver"/>
-                <property name="url"
-                          value="jdbc:mysql://localhost:3306/ssm_emp?useUnicode=true&amp;characterEncoding=utf8&amp;useSSL=false&amp;serverTimezone=Asia/Shanghai&amp;allowPublicKeyRetrieval=true"/>
-                <property name="username" value="root"/>
-                <property name="password" value="1q2w3e4r"/>
+                <property name="driver" value="${jdbc.driver}"/>
+                <property name="url" value="${jdbc.url}"/>
+                <property name="username" value="${jdbc.username}"/>
+                <property name="password" value="${jdbc.password}"/>
             </dataSource>
         </environment>
     </environments>

@@ -4,42 +4,45 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="org.example.mapper.EmpMapper">
 
-    <!--
-        查询结果直接使用 resultType="Emp"（别名来自 <typeAliases> 的包扫描）。
-        数据库下划线列名（emp_id、emp_name、hire_date ...）依靠
-        mapUnderscoreToCamelCase=true 自动映射为驼峰字段，无需额外 resultMap。
-    -->
-    <select id="selectById" parameterType="int" resultType="Emp">
-        SELECT emp_id, emp_name, gender, dept, post, salary, hire_date, status
+    <!-- 公共字段片段：查询时复用，避免重复书写列名 -->
+    <sql id="empColumns">emp_id, emp_name, gender, dept, post, salary, hire_date, status</sql>
+
+    <!-- 查询结果直接使用 resultType="Emp"（别名来自 <typeAliases> 包扫描），
+         下划线列名依靠 mapUnderscoreToCamelCase=true 自动映射为驼峰字段 -->
+    <select id="selectById" resultType="Emp">
+        SELECT <include refid="empColumns"/>
         FROM emp
         WHERE emp_id = #{empId}
     </select>
 
     <select id="selectAll" resultType="Emp">
-        SELECT emp_id, emp_name, gender, dept, post, salary, hire_date, status
+        SELECT <include refid="empColumns"/>
         FROM emp
         ORDER BY emp_id
     </select>
 
     <!-- useGeneratedKeys + keyProperty：把数据库自增主键回填到实体类 empId 字段 -->
-    <insert id="insert" parameterType="Emp" useGeneratedKeys="true" keyProperty="empId">
+    <insert id="insert" useGeneratedKeys="true" keyProperty="empId">
         INSERT INTO emp (emp_name, gender, dept, post, salary, hire_date, status)
         VALUES (#{empName}, #{gender}, #{dept}, #{post}, #{salary}, #{hireDate}, #{status})
     </insert>
 
-    <update id="update" parameterType="Emp">
+    <!-- 动态更新：只更新非 null 字段，避免把未修改的列覆盖成 NULL -->
+    <update id="update">
         UPDATE emp
-        SET emp_name = #{empName},
-            gender    = #{gender},
-            dept      = #{dept},
-            post      = #{post},
-            salary    = #{salary},
-            hire_date = #{hireDate},
-            status    = #{status}
+        <set>
+            <if test="empName != null">emp_name = #{empName},</if>
+            <if test="gender != null">gender = #{gender},</if>
+            <if test="dept != null">dept = #{dept},</if>
+            <if test="post != null">post = #{post},</if>
+            <if test="salary != null">salary = #{salary},</if>
+            <if test="hireDate != null">hire_date = #{hireDate},</if>
+            <if test="status != null">status = #{status},</if>
+        </set>
         WHERE emp_id = #{empId}
     </update>
 
-    <delete id="deleteById" parameterType="int">
+    <delete id="deleteById">
         DELETE FROM emp
         WHERE emp_id = #{empId}
     </delete>

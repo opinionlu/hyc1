@@ -30,19 +30,6 @@ public class Emp {
     public Emp() {
     }
 
-    /** 全参构造 */
-    public Emp(Integer empId, String empName, String gender, String dept, String post,
-               BigDecimal salary, Date hireDate, Integer status) {
-        this.empId = empId;
-        this.empName = empName;
-        this.gender = gender;
-        this.dept = dept;
-        this.post = post;
-        this.salary = salary;
-        this.hireDate = hireDate;
-        this.status = status;
-    }
-
     public Integer getEmpId() {
         return empId;
     }
