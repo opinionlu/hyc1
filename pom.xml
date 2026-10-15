@@ -15,17 +15,17 @@
     </properties>
 
     <dependencies>
-        <!-- MyBatis -->
+        <!-- MyBatis-Plus（内置 MyBatis 核心，无需再单独引入 mybatis） -->
         <dependency>
-            <groupId>org.mybatis</groupId>
-            <artifactId>mybatis</artifactId>
-            <version>3.5.13</version>
+            <groupId>com.baomidou</groupId>
+            <artifactId>mybatis-plus</artifactId>
+            <version>3.5.3.1</version>
         </dependency>
-        <!-- MySQL 驱动 -->
+        <!-- MySQL 驱动（与服务端 MySQL 9.0.1 匹配） -->
         <dependency>
             <groupId>com.mysql</groupId>
             <artifactId>mysql-connector-j</artifactId>
-            <version>8.0.33</version>
+            <version>9.1.0</version>
         </dependency>
         <!-- JUnit -->
         <dependency>
@@ -39,6 +39,12 @@
             <groupId>log4j</groupId>
             <artifactId>log4j</artifactId>
             <version>1.2.17</version>
+        </dependency>
+        <!-- Spring Core：MyBatis-Plus 解析 BaseMapper 泛型需要 GenericTypeResolver（仅此一个类） -->
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-core</artifactId>
+            <version>5.3.31</version>
         </dependency>
     </dependencies>
 

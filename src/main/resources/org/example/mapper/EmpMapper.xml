@@ -7,44 +7,142 @@
     <!-- 公共字段片段：查询时复用，避免重复书写列名 -->
     <sql id="empColumns">emp_id, emp_name, gender, dept, post, salary, hire_date, status</sql>
 
-    <!-- 查询结果直接使用 resultType="Emp"（别名来自 <typeAliases> 包扫描），
-         下划线列名依靠 mapUnderscoreToCamelCase=true 自动映射为驼峰字段 -->
-    <select id="selectById" resultType="Emp">
-        SELECT <include refid="empColumns"/>
-        FROM emp
-        WHERE emp_id = #{empId}
-    </select>
-
     <select id="selectAll" resultType="Emp">
         SELECT <include refid="empColumns"/>
         FROM emp
         ORDER BY emp_id
     </select>
 
-    <!-- useGeneratedKeys + keyProperty：把数据库自增主键回填到实体类 empId 字段 -->
-    <insert id="insert" useGeneratedKeys="true" keyProperty="empId">
+    <!-- 多条件模糊查询：<where> 自动加 WHERE 并去掉首个多余的 AND/OR；<if> 按非空条件动态拼接 -->
+    <select id="selectByCondition" resultType="Emp">
+        SELECT <include refid="empColumns"/>
+        FROM emp
+        <where>
+            <if test="empName != null and empName != ''">
+                AND emp_name LIKE CONCAT('%', #{empName}, '%')
+            </if>
+            <if test="gender != null and gender != ''">
+                AND gender = #{gender}
+            </if>
+            <if test="dept != null and dept != ''">
+                AND dept LIKE CONCAT('%', #{dept}, '%')
+            </if>
+            <if test="post != null and post != ''">
+                AND post LIKE CONCAT('%', #{post}, '%')
+            </if>
+            <if test="status != null">
+                AND status = #{status}
+            </if>
+        </where>
+        ORDER BY emp_id
+    </select>
+
+    <!-- 分支选择：<choose>/<when>/<otherwise> 类似 switch，只执行第一个满足的分支 -->
+    <select id="selectByChoose" resultType="Emp">
+        SELECT <include refid="empColumns"/>
+        FROM emp
+        <where>
+            <choose>
+                <when test="empName != null and empName != ''">
+                    emp_name = #{empName}
+                </when>
+                <when test="dept != null and dept != ''">
+                    dept = #{dept}
+                </when>
+                <otherwise>
+                    1 = 1
+                </otherwise>
+            </choose>
+        </where>
+        ORDER BY emp_id
+    </select>
+
+    <!-- 关键字检索：姓名/部门/岗位 任一字段模糊匹配 -->
+    <select id="selectByKeyword" resultType="Emp">
+        SELECT <include refid="empColumns"/>
+        FROM emp
+        <where>
+            <if test="keyword != null and keyword != ''">
+                emp_name LIKE CONCAT('%', #{keyword}, '%')
+                OR dept LIKE CONCAT('%', #{keyword}, '%')
+                OR post LIKE CONCAT('%', #{keyword}, '%')
+            </if>
+        </where>
+        ORDER BY emp_id
+    </select>
+
+    <!-- 批量插入：<foreach> 遍历集合生成多组 VALUES -->
+    <insert id="insertBatch">
         INSERT INTO emp (emp_name, gender, dept, post, salary, hire_date, status)
-        VALUES (#{empName}, #{gender}, #{dept}, #{post}, #{salary}, #{hireDate}, #{status})
+        VALUES
+        <foreach collection="emps" item="e" separator=",">
+            (#{e.empName}, #{e.gender}, #{e.dept}, #{e.post}, #{e.salary}, #{e.hireDate}, #{e.status})
+        </foreach>
     </insert>
 
-    <!-- 动态更新：只更新非 null 字段，避免把未修改的列覆盖成 NULL -->
-    <update id="update">
-        UPDATE emp
-        <set>
-            <if test="empName != null">emp_name = #{empName},</if>
-            <if test="gender != null">gender = #{gender},</if>
-            <if test="dept != null">dept = #{dept},</if>
-            <if test="post != null">post = #{post},</if>
-            <if test="salary != null">salary = #{salary},</if>
-            <if test="hireDate != null">hire_date = #{hireDate},</if>
-            <if test="status != null">status = #{status},</if>
-        </set>
-        WHERE emp_id = #{empId}
-    </update>
+    <!-- ============================================================
+         多表查询：emp（员工）与 dept（部门）通过 dept_id 外键关联
+         ============================================================ -->
 
-    <delete id="deleteById">
-        DELETE FROM emp
-        WHERE emp_id = #{empId}
-    </delete>
+    <!--
+        多对一：嵌套结果映射（一条 JOIN SQL 查出全部数据）。
+        <association> 描述「一个员工属于一个部门」，javaType 指定关联对象类型。
+        注意：两表都有 dept_id 列，部门表的 dept_id 必须用别名 d_dept_id，
+              否则会与员工表的 dept_id 冲突导致映射错乱。
+    -->
+    <resultMap id="empWithDeptMap" type="Emp">
+        <id     column="emp_id"    property="empId"/>
+        <result column="emp_name"  property="empName"/>
+        <result column="gender"    property="gender"/>
+        <result column="dept"      property="dept"/>
+        <result column="dept_id"   property="deptId"/>
+        <result column="post"      property="post"/>
+        <result column="salary"    property="salary"/>
+        <result column="hire_date" property="hireDate"/>
+        <result column="status"    property="status"/>
+        <association property="deptInfo" javaType="Dept">
+            <id     column="d_dept_id"  property="deptId"/>
+            <result column="dept_name"  property="deptName"/>
+            <result column="location"   property="location"/>
+            <result column="manager"    property="manager"/>
+        </association>
+    </resultMap>
+
+    <select id="selectEmpWithDept" resultMap="empWithDeptMap">
+        SELECT e.emp_id, e.emp_name, e.gender, e.dept, e.dept_id,
+               e.post, e.salary, e.hire_date, e.status,
+               d.dept_id AS d_dept_id, d.dept_name, d.location, d.manager
+        FROM emp e
+        LEFT JOIN dept d ON e.dept_id = d.dept_id
+        ORDER BY e.emp_id
+    </select>
+
+    <!--
+        多对一：分步查询（两条 SQL）。
+        <association> 不写 javaType，而是用 select + column 指向另一条语句，
+        由 MyBatis 用第一个查询结果中的 dept_id 去执行 selectDeptById。
+        fetchType="lazy" 表示延迟加载：只有真正访问 deptInfo 时才发出第二条 SQL。
+    -->
+    <resultMap id="empStepMap" type="Emp">
+        <id     column="emp_id"    property="empId"/>
+        <result column="emp_name"  property="empName"/>
+        <result column="gender"    property="gender"/>
+        <result column="dept"      property="dept"/>
+        <result column="dept_id"   property="deptId"/>
+        <result column="post"      property="post"/>
+        <result column="salary"    property="salary"/>
+        <result column="hire_date" property="hireDate"/>
+        <result column="status"    property="status"/>
+        <association property="deptInfo"
+                     column="dept_id"
+                     select="org.example.mapper.DeptMapper.selectDeptById"
+                     fetchType="lazy"/>
+    </resultMap>
+
+    <select id="selectEmpWithDeptStep" resultMap="empStepMap">
+        SELECT emp_id, emp_name, gender, dept, dept_id, post, salary, hire_date, status
+        FROM emp
+        ORDER BY emp_id
+    </select>
 
 </mapper>
