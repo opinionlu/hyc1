@@ -37,3 +37,10 @@ build/
 
 ### Mac OS ###
 .DS_Store
+
+### 数据库连接配置（含明文密码，禁止提交）###
+src/main/resources/db.properties
+
+### 报告与文档的备份副本 ###
+*.bak
+实验报告-备份.doc

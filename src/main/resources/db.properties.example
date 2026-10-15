@@ -1,0 +1,10 @@
+# ============================================================
+#  数据库连接配置模板
+#  使用说明：复制本文件为 db.properties，并填入自己的实际连接信息。
+#  db.properties 已被 .gitignore 忽略，不会提交到仓库。
+# ============================================================
+
+jdbc.driver=com.mysql.cj.jdbc.Driver
+jdbc.url=jdbc:mysql://localhost:3306/ssm_emp?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+jdbc.username=你的数据库用户名
+jdbc.password=你的数据库密码

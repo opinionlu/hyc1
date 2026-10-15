@@ -13,6 +13,8 @@
         <setting name="mapUnderscoreToCamelCase" value="true"/>
         <!-- 使用 Log4j 输出 SQL 日志 -->
         <setting name="logImpl" value="LOG4J"/>
+        <!-- 开启延迟加载（懒加载）：分步查询时，只有访问关联对象才发出第二条 SQL -->
+        <setting name="lazyLoadingEnabled" value="true"/>
     </settings>
 
     <!-- 类型别名：将实体类包下的类注册为别名，XML 中可直接用类名 -->
